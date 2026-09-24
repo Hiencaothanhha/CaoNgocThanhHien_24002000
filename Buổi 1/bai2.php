@@ -7,6 +7,9 @@ $student = [
 ];
 
 function caculateAverageScore($student) {
+    if (empty($student)) {
+        return 0;
+    }
     $totalScore  = 0;
     foreach ($student as $s) {
         $totalScore += $s["score"];
@@ -17,9 +20,9 @@ function caculateAverageScore($student) {
 function getRank($score) {
     if ($score >= 8) {
         return "Giỏi";
-    } else if ($score >= 6.5 && $score < 8) {
+    } else if ($score >= 6.5) {
         return "Khá";
-    } else if ($score >= 5 && $score < 6.5) {
+    } else if ($score >= 5) {
         return "Trung Bình";
     } else {
         return "Yếu";
