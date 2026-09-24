@@ -7,8 +7,13 @@ $student = [
 ];
 
 function findBestStudent($student) {
+    if (empty($student)) {
+        return null;
+    }
+
     $bestStudent = $student[0];
-    for ($i = 1; $i < count($student); $i++) {
+    $len = count($student);
+    for ($i = 1; $i < $len; $i++) {
         if ($bestStudent["score"] < $student[$i]["score"]) {
             $bestStudent = $student[$i];
         }
@@ -17,8 +22,13 @@ function findBestStudent($student) {
 }
 
 function findWorstStudent($student) {
+    if (empty($student)) {
+        return null;
+    }
+
     $worstStudent = $student[0];
-    for ($i = 1; $i < count($student); $i++) {
+    $len = count($student);
+    for ($i = 1; $i < $len; $i++) {
         if ($worstStudent["score"] > $student[$i]["score"]) {
             $worstStudent = $student[$i];
         }
@@ -27,6 +37,9 @@ function findWorstStudent($student) {
 }
 
 function countPassedStudents($student) {
+    if (empty($student)) {
+        return 0;
+    }
     $countPassedStudents = 0;
     foreach ($student as $s) {
         if ($s["score"] >= 5) {
@@ -50,8 +63,14 @@ $bestStudent = findBestStudent($student);
 $worstStudent = findWorstStudent($student);
 $name = "Dung";
 
-echo "Sinh viên có điểm cao nhất: " . $bestStudent["name"] . ", Điểm: " . $bestStudent["score"] . "<br>";
-echo "Sinh viên có điểm thấp nhất: ". $worstStudent["name"] . ", Điểm: " . $worstStudent["score"] . "<br>";
+if ($bestStudent) {
+    echo "Sinh viên có điểm cao nhất: " . $bestStudent["name"] . ", Điểm: " . $bestStudent["score"] . "<br>";
+}
+
+if ($worstStudent) {
+    echo "Sinh viên có điểm thấp nhất: " . $worstStudent["name"] . ", Điểm: " . $worstStudent["score"] . "<br>";
+}
+
 echo "Số sinh viên đạt: " . countPassedStudents($student) ."<br>";
 echo "Tìm kiếm sinh viên theo tên " . $name . " : " . findStudentByName($student, $name) ."<br>";
 
