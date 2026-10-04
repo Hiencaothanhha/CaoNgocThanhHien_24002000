@@ -46,4 +46,4 @@ SELECT SUM((total_seats - available_seats)*price) AS total_revenue FROM movies;
 
 -- Tìm phim có số vé bán ra nhiều nhất
 SELECT title, (total_seats - available_seats) AS sold_tickets FROM movies
-HAVING sold_tickets = (SELECT MAX(total_seats - available_seats) FROM movies);
+GROUP BY id, title HAVING sold_tickets = (SELECT MAX(total_seats - available_seats) FROM movies);
