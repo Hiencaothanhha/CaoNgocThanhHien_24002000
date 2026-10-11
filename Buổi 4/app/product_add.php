@@ -25,7 +25,8 @@ include 'view/header.php';
     </div>
     
     <div class="form-row action-buttons">
-        <button type="submit">Lưu</button>
+        <button type="submit" style="margin-right: 50px;">Lưu</button>
+        <a href="product_list.php"><button type="button">Quay lại</button></a>
     </div>
 </form>
 <?php include 'view/footer.php'; ?>
