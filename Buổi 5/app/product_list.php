@@ -27,7 +27,10 @@ include 'view/header.php';
         <td><?= $p['quantity'] ?></td>
         <td>
             <a href="product_edit.php?id=<?= $p['id'] ?>">Sửa</a> | 
-            <a href="product_delete.php?id=<?= $p['id'] ?>">Xóa</a>
+            <form method="POST" action="product_delete.php" style="display:inline; margin:0;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');">
+                <input type="hidden" name="id" value="<?= $p['id'] ?>">
+                <button type="submit" style="background: none; border: none; color: gray; cursor: pointer; text-decoration: none; padding: 0; font-size: inherit; font-family: inherit;" onmouseover="this.style.color='black'" onmouseout="this.style.color='gray'">Xóa</button>
+            </form>
         </td>
     </tr>
     <?php endforeach; ?>
