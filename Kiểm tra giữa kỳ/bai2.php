@@ -29,14 +29,14 @@ function caculateTotal($product) {
 
 function findMaxPrice($product) {
     if (empty($product)) {
-        return "";
+        return 0;
     }
 
     $len = count($product);
     for ($i = 0; $i < $len; $i++) {
         if ($product[$i]['price'] < 0 || $product[$i]['quantity'] < 0) {
             echo "Sản phẩm không hợp lệ!";
-            return "";
+            return 0;
         }
         
     }
@@ -59,6 +59,7 @@ $total = caculateTotal($products);
 $maxProduct = findMaxPrice($products);
 
 echo "Tổng giá trị sản phẩm: " . $total . " VNĐ <br>";
+
 echo "Sản phẩm có giá cao nhất: " . $maxProduct . " VNĐ <br>";
 
 ?>
