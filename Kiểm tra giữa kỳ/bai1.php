@@ -2,10 +2,6 @@
 $name = "Cao Ngọc Thanh Hiền";
 $score = 10;
 
-if ($score < 0 || $score > 10) {
-    echo "Điểm không hợp lệ! <br>";
-}
-
 function xepLoai($sc) {
     if ($sc >= 8) {
         return "Giỏi";
@@ -18,7 +14,10 @@ function xepLoai($sc) {
     }
 }
 
-$xepLoai = xepLoai($score);
-
-echo "Họ và tên: " . $name . " | Điểm: " . $score . " | Xếp loại: " . $xepLoai;
+if ($score < 0 || $score > 10) {
+    echo "Điểm không hợp lệ! <br>";
+} else {
+    $xepLoai = xepLoai($score);
+    echo "Họ và tên: " . $name . " | Điểm: " . $score . " | Xếp loại: " . $xepLoai;
+}
 ?>
