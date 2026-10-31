@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Thẻ Thông Tin Sinh Viên</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .card { 
+            background-color: #ffffff;
+            padding-bottom: 20px;
+            padding-top: 20px;
+            width: 500px;
+            height: 500px;
+            border-radius: 12px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+        
+        .avatar { 
+            width: 130px; 
+            height: 130px; 
+            object-fit: cover; 
+            border-radius: 50%; 
+            
+            display: block; 
+            margin: 0 auto 20px auto; 
+            
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        h2 { 
+            text-align: center; 
+            color: #2c3e50; 
+            font-size: 1.4rem;
+        }
+        
+        p { 
+            margin: 10px 0; 
+            color: #555; 
+            font-size: 0.95rem;
+        }
+
+        .info-box {
+            width: fit-content;
+            margin: 0 auto;
+            text-align: left;
+        }
+        
+        button { 
+            display: block;
+            margin: 20px auto 0 auto;
+            padding: 12px; 
+            text-align: center;
+            cursor: pointer; 
+            background-color: #4CAF50; 
+            color: white;
+            border: none;
+            border-radius: 6px;
+            width: 75%;
+            font-weight: bold;
+            transition: background-color 0.2s ease;
+        }
+        
+        button:hover { 
+            background-color: #45a049; 
+        }
+        
+        .intro-box { 
+            padding: 15px; 
+            background-color: #f9f9f9; 
+            border-left: 4px solid #4CAF50; 
+            margin-top: 15px; 
+            border-radius: 4px;
+            color: #444;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="card">
+        <!-- Gắn đường dẫn ảnh và nội dung thay thế bằng v-bind -->
+        <img v-bind:src="anhDaiDien" v-bind:alt="hoTen" class="avatar">
+        <!-- Hiển thị họ tên bằng {{ }}, tên lớp bằng v-text -->
+        <h2>{{ hoTen }}</h2>
+        <div class="info-box">
+            <p>Mã sinh viên: {{ maSV }}</p>
+            <p>Lớp: <span v-text="lop"></span></p>
+
+            <p>Điểm TB: {{ diemTB }}</p>
+            <!-- Dựa trên điểm trung bình, hiển thị xếp loại -->
+            <p>Xếp loại: 
+                <!-- Dùng :class hoặc :style để đổi màu xếp loại -->
+                <strong v-if="diemTB >= 8" :style="{ color: '#4CAF50' }">Giỏi</strong>
+                <strong v-else-if="diemTB >= 6.5" :style="{ color: 'orange' }">Khá</strong>
+                <strong v-else-if="diemTB >= 5" :style="{ color: 'blue' }">Trung bình</strong>
+                <strong v-else :style="{ color: 'gray' }">Chưa đạt</strong>
+            </p>
+            <!-- Hiển thị "Đang học" hoặc "Đã nghỉ theo trạng thái" -->
+            <p>Trạng thái: <strong>{{ trangThai ? 'Đang học' : 'Đã nghỉ' }}</strong></p>
+        </div>
+        <!-- Bật tắt giới thiệu bằng v-show -->
+        <button @click="hienThiGioiThieu = !hienThiGioiThieu">
+            <span v-show="!hienThiGioiThieu">Hiện giới thiệu</span>
+            <span v-show="hienThiGioiThieu">Ẩn giới thiệu</span>
+        </button>
+        <div v-show="hienThiGioiThieu" class="intro-box">Đây là {{ hoTen }}, sinh viên Đại học Khoa học Tự nhiên - Đại học Quốc gia Hà Nội...</div>
+    </div>
+
+    <script>
+        const app = Vue.createApp({
+            // Khai báo dữ liệu
+            data() {
+                return {
+                    maSV: '20002000',
+                    hoTen: 'Cao Ngọc Thanh Hiền',
+                    lop: 'KHMT&TT',
+                    anhDaiDien: 'https://24hstore.vn/upload_images/images/hinh-nen-chibi/Hinh-nen-cute-chibi-nu_(6).jpg',
+                    diemTB: 9.5,
+                    trangThai: true,
+                    hienThiGioiThieu: false
+                }
+            }
+        });
+
+        app.mount('#app');
+    </script>
+</body>
+</html>

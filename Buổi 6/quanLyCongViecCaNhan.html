@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List App</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 50px 20px;
+            margin: 0;
+        }
+
+        .todo-app {
+            background-color: #ffffff;
+            padding: 35px 30px;
+            width: 100%;
+            max-width: 480px;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            background: #f8f9fa;
+            border-radius: 50px;
+            padding: 5px 5px 5px 20px;
+        }
+
+        .input-group input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            outline: none;
+            color: #333;
+        }
+
+        .input-group button {
+            padding: 12px 24px;
+            background-color: #5e72e4;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .input-group button:hover { 
+            background-color: #324cdd; 
+        }
+
+        ul { list-style-type: none; padding: 0; margin: 0; }
+
+        li {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f1f1f1;
+            transition: all 0.3s ease;
+        }
+
+        li:last-child { border-bottom: none; }
+
+        li input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 2px solid #cbd5e0;
+            border-radius: 50%;
+            margin-right: 15px;
+            cursor: pointer;
+            position: relative;
+            outline: none;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+
+        li input[type="checkbox"]:checked {
+            background-color: #2dce89;
+            border-color: #2dce89;
+        }
+
+        li input[type="checkbox"]:checked::after {
+            content: '✔';
+            color: white;
+            font-size: 14px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 1.05rem;
+            color: #334155;
+            transition: 0.2s;
+        }
+
+        /* Công việc đã hoàn thành hiển thị gạch ngang */
+        .completed .task-text {
+            text-decoration: line-through;
+            color: #a0aec0;
+        }
+
+        .btn-delete {
+            background: transparent;
+            color: #f5365c;
+            border: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0;
+            transition: 0.2s;
+        }
+
+        li:hover .btn-delete { 
+            opacity: 1; 
+        }
+        .btn-delete:hover { 
+            text-decoration: underline; 
+        }
+
+        .footer-controls {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #edf2f7;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .filters button {
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #718096;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+
+        .filters button:hover { 
+            border-color: #cbd5e0; 
+        }
+
+        .filters button.active {
+            border-color: #5e72e4;
+            color: #5e72e4;
+            font-weight: bold;
+            background: #f4f5fa;
+        }
+
+        .btn-clear {
+            width: 100%;
+            padding: 12px;
+            background-color: #f5365c;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+
+        .btn-clear:hover { 
+            background-color: #d92550; 
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #a0aec0;
+            padding: 30px 0;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app" class="todo-app">
+        <div class="header">
+            <h2>To-Do List</h2>
+        </div>
+
+        <div class="input-group">
+            <input 
+                type="text" 
+                v-model="tenCongViecMoi" 
+                @keyup.enter="themCongViec" 
+                placeholder="Thêm công việc mới..."
+            >
+            <!-- Thêm công việc bằng nút "Thêm" -->
+            <button @click="themCongViec">Thêm</button>
+        </div>
+
+        <!-- Hiển thị thông báo khi danh sách hoặc kết quả lọc rỗng -->
+        <div v-if="danhSachLoc.length === 0" class="empty-message">
+            {{ thongBaoRong }}
+        </div>
+
+        <ul v-else>
+            <!-- Hiển thị danh sách bằng v-for, sử dụng id làm key -->
+            <li v-for="task in danhSachLoc" :key="task.id" :class="{ completed: task.hoanThanh }">
+                <!-- Cho phép đánh dấu hoàn thành bằng checkbox -->
+                <input type="checkbox" v-model="task.hoanThanh">
+                <span class="task-text">{{ task.ten }}</span>
+                <button class="btn-delete" @click="xoaCongViec(task.id)">Xóa</button>
+            </li>
+        </ul>
+
+        <div class="footer-controls">
+            <div class="stats">
+                <span>Tổng số: {{ tongSoCongViec }}</span>
+                <span>Còn lại: <strong style="color: #f5365c;">{{ soViecChuaHoanThanh }}</strong></span>
+            </div>
+            
+            <!-- Lọc theo ba trạng thái: "Tất cả", "Chưa hoàn thành", "Đã hoàn thành" -->
+            <div class="filters">
+                <button :class="{ active: boLocHienTai === 'all' }" @click="boLocHienTai = 'all'">Tất cả</button>
+                <button :class="{ active: boLocHienTai === 'active' }" @click="boLocHienTai = 'active'">Chưa hoàn thành</button>
+                <button :class="{ active: boLocHienTai === 'completed' }" @click="boLocHienTai = 'completed'">Đã hoàn thành</button>
+            </div>
+            
+            <!-- Xóa các việc đã hoàn thành -->
+            <button 
+                v-if="danhSachCongViec.some(t => t.hoanThanh)" 
+                class="btn-clear" 
+                @click="xoaViecDaHoanThanh"
+            >
+                Xóa việc đã hoàn thành
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    tenCongViecMoi: '',
+                    boLocHienTai: 'all',
+                    // Mỗi công việc gồm id, tên công việc, và trạng thái hoàn thành
+                    danhSachCongViec: [
+                        { id: 1, ten: 'Học bài VueJS', hoanThanh: true },
+                        { id: 2, ten: 'Làm bài tập Web', hoanThanh: false },
+                        { id: 3, ten: 'Thi giữa kỳ Web', hoanThanh: false }
+                    ]
+                }
+            },
+            computed: {
+                // Tính tổng số công việc và số việc chưa hoàn thành
+                tongSoCongViec() { return this.danhSachCongViec.length; },
+                soViecChuaHoanThanh() { return this.danhSachCongViec.filter(task => !task.hoanThanh).length; },
+                danhSachLoc() {
+                    if (this.boLocHienTai === 'active') return this.danhSachCongViec.filter(task => !task.hoanThanh);
+                    if (this.boLocHienTai === 'completed') return this.danhSachCongViec.filter(task => task.hoanThanh);
+                    return this.danhSachCongViec;
+                },
+                thongBaoRong() {
+                    if (this.danhSachCongViec.length === 0) return "Bạn chưa có công việc nào!";
+                    if (this.boLocHienTai === 'active') return "Tuyệt vời! Không còn việc nào dang dở.";
+                    if (this.boLocHienTai === 'completed') return "Chưa có công việc nào được hoàn thành.";
+                    return "Không có dữ liệu.";
+                }
+            },
+            methods: {
+                // Không cho thêm tên rỗng hoặc chỉ chứa khoảng trắng
+                themCongViec() {
+                    if (this.tenCongViecMoi.trim() === '') {
+                        alert("Tên công việc không được để trống!");
+                        return;
+                    }
+                    this.danhSachCongViec.push({
+                        id: Date.now(),
+                        ten: this.tenCongViecMoi.trim(),
+                        hoanThanh: false
+                    });
+                    this.tenCongViecMoi = '';
+                },
+                // Xóa từng công việc
+                xoaCongViec(idCanXoa) {
+                    if(confirm("Bạn có chắc chắn muốn xóa công việc này?")) {
+                        this.danhSachCongViec = this.danhSachCongViec.filter(task => task.id !== idCanXoa);
+                    }
+                },
+                xoaViecDaHoanThanh() {
+                    if(confirm("Xóa tất cả các việc đã hoàn thành?")) {
+                        this.danhSachCongViec = this.danhSachCongViec.filter(task => !task.hoanThanh);
+                    }
+                }
+            }
+        });
+        app.mount('#app');
+    </script>
+</body>
+</html>
