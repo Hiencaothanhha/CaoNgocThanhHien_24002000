@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ Hàng</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            padding: 30px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 15px;
+            margin-top: 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            padding: 12px;
+            text-align: center;
+            border-bottom: 2px solid #dee2e6;
+            color: #495057;
+        }
+        
+        td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-danger {
+            color: #e74c3c;
+        }
+        
+        .font-bold {
+            font-weight: bold;
+        }
+        
+        .btn-qty {
+            width: 32px;
+            height: 32px;
+            background-color: #f1f3f5;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #495057;
+            transition: 0.2s;
+        }
+        
+        .btn-qty:hover:not(:disabled) {
+            background-color: #e2e6ea;
+        }
+        
+        .btn-qty:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .qty-display {
+            display: inline-block;
+            width: 40px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .btn-delete {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        
+        .btn-delete:hover {
+            background-color: #fa5252;
+        }
+        
+        .cart-summary {
+            margin-top: 25px;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1rem;
+        }
+        
+        .total-price {
+            font-size: 1.4rem;
+            color: #e74c3c;
+        }
+        
+        .empty-cart {
+            text-align: center;
+            padding: 50px 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 20px;
+            color: #868e96;
+            font-size: 1.2rem;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app" class="container">
+        <h2>Giỏ Hàng Của Bạn</h2>
+
+        <!-- Khi xóa hết sản phẩm, hiển thị "Giỏ hàng trống" -->
+        <div v-if="gioHang.length === 0" class="empty-cart">
+            🛒 Giỏ hàng trống.
+        </div>
+
+        <div v-else>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">Sản phẩm</th>
+                        <th style="text-align: right;">Đơn giá</th>
+                        <th>Số lượng</th>
+                        <th style="text-align: right;">Thành tiền</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <dong-gio-hang 
+                        v-for="sp in gioHang" 
+                        :key="sp.id"
+                        :id="sp.id"
+                        :ten="sp.ten"
+                        :don-gia="sp.donGia"
+                        :so-luong="sp.soLuong"
+                        @doi-so-luong="xuLyDoiSoLuong"
+                        @yeu-cau-xoa="xuLyXoaSanPham"
+                    ></dong-gio-hang>
+                </tbody>
+            </table>
+
+            <!-- Hiển thị tổng số lượng và tổng tiền -->
+            <div class="cart-summary">
+                <div>Tổng số lượng: <strong>{{ tongSoLuong }}</strong> sản phẩm</div>
+                <div>Tổng thanh toán: <strong class="total-price">{{ formatTien(tongTien) }} đ</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nạp file Component con -->
+    <script src="components/DongGioHang.js"></script>
+    
+    <script>
+        const app = Vue.createApp({
+            // Mỗi mục gồm id, tên, đơn giá, số lượng.
+            data() {
+                return {
+                    gioHang: [
+                        { id: 1, ten: 'Bút', donGia: 5000, soLuong: 2 },
+                        { id: 2, ten: 'Quyển vở', donGia: 12000, soLuong: 3 }
+                    ]
+                }
+            },
+            
+            computed: {
+                // Component cha dùng computed tính tổng số lượng và tổng tiền
+                tongSoLuong() {
+                    return this.gioHang.reduce((tong, sp) => tong + sp.soLuong, 0);
+                },
+                tongTien() {
+                    return this.gioHang.reduce((tong, sp) => tong + (sp.donGia * sp.soLuong), 0);
+                }
+            },
+            
+            methods: {
+                // Component cha nhận sự kiện, kiểm tra dữ liệu rồi cập nhật mảng
+                xuLyDoiSoLuong(id, soLuongMoi) {
+                    // Kiểm tra số lượng chỉ được nhận giá trị nguyên từ 1 đến 99
+                    if (Number.isInteger(soLuongMoi) && soLuongMoi >= 1 && soLuongMoi <= 99) {
+                        const sanPham = this.gioHang.find(sp => sp.id === id);
+                        if (sanPham) {
+                            sanPham.soLuong = soLuongMoi; 
+                        }
+                    }
+                },
+                
+                xuLyXoaSanPham(id) {
+                    // Dùng hàm filter để giữ lại các sản phẩm có ID khác với ID cần xóa
+                    this.gioHang = this.gioHang.filter(sp => sp.id !== id);
+                },
+                
+                formatTien(so) {
+                    return new Intl.NumberFormat('vi-VN').format(so);
+                }
+            }
+        });
+
+        app.component('dong-gio-hang', DongGioHang);
+        app.mount('#app');
+    </script>
+</body>
+</html>

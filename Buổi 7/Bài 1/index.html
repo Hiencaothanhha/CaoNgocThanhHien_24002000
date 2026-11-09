@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Sản Phẩm</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f4f7f6; 
+            padding: 20px; 
+            color: #333; 
+        }
+        
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: #fff; 
+            padding: 25px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+        }
+        
+        h2 { 
+            border-bottom: 2px solid #4CAF50; 
+            padding-bottom: 10px; 
+            color: #2c3e50; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-end; 
+        }
+        
+        .status-badge { 
+            font-size: 0.9rem; 
+            padding: 5px 10px; 
+            background: #e8f5e9; 
+            color: #2e7d32; 
+            border-radius: 20px; 
+            font-weight: normal; 
+        }
+        
+        /* Layout điều khiển & Form */
+        .controls-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr; 
+            gap: 15px; 
+            margin-bottom: 20px; 
+        }
+        
+        .form-add { 
+            display: grid; 
+            grid-template-columns: 2fr 1fr 1fr 1fr auto; 
+            gap: 10px; 
+            align-items: end; 
+            background: #f9f9f9; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+        }
+        
+        .input-group { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 5px; 
+        }
+        
+        .input-group label { 
+            font-size: 0.85rem; 
+            font-weight: bold; 
+            color: #555; 
+        }
+        
+        input, select { 
+            padding: 9px; 
+            border: 1px solid #ccc; 
+            border-radius: 5px; 
+            font-size: 0.95rem; 
+        }
+        
+        button { 
+            padding: 10px 15px; 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            transition: 0.2s; 
+        }
+        
+        button:hover { 
+            background: #45a049; 
+        }
+        
+        .btn-delete { 
+            background: #e74c3c; 
+            padding: 6px 10px; 
+            font-size: 0.85rem;
+        }
+        
+        .btn-delete:hover { 
+            background: #c0392b; 
+        }
+
+        /* Bảng dữ liệu */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 20px; 
+        }
+        
+        th, td { 
+            padding: 12px; 
+            text-align: left; 
+            border-bottom: 1px solid #eee; 
+        }
+        
+        th { 
+            background: #f8f9fa; 
+            font-weight: bold; 
+            color: #444; 
+        }
+        
+        tr:hover { 
+            background: #fdfdfd; 
+        }
+        
+        /* Nhãn trạng thái */
+        .badge { 
+            padding: 5px 10px; 
+            border-radius: 12px; 
+            font-size: 0.85rem; 
+            font-weight: bold; 
+        }
+        
+        .in-stock { 
+            background: #d4edda; 
+            color: #155724; 
+        }
+        
+        .out-of-stock { 
+            background: #f8d7da; 
+            color: #721c24; 
+        }
+
+        /* Thống kê & Thông báo */
+        .stats { 
+            display: flex; 
+            justify-content: space-between; 
+            background: #eef2f5; 
+            padding: 15px; 
+            border-radius: 8px; 
+            font-size: 1.05rem; 
+            font-weight: bold; 
+            color: #2c3e50; 
+        }
+        
+        .notice { 
+            background: #fff3cd; 
+            color: #856404; 
+            padding: 10px; 
+            border-radius: 5px; 
+            margin-bottom: 15px; 
+            font-size: 0.9rem; 
+            border-left: 4px solid #ffeeba; 
+        }
+        
+        .empty-row { 
+            text-align: center; 
+            color: #777; 
+            font-style: italic; 
+            padding: 20px !important; 
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app" class="container">
+        <h2>
+            Quản Lý Sản Phẩm
+            <span class="status-badge">Trạng thái: {{ trangThaiTrang }}</span>
+        </h2>
+
+        <div v-if="thongBao" class="notice">
+            {{ thongBao }}
+        </div>
+
+        <div class="controls-grid">
+            <div class="input-group">
+                <label>Tìm kiếm sản phẩm:</label>
+                <input type="text" v-model="tuKhoa" placeholder="Nhập tên sản phẩm...">
+            </div>
+            <!-- Lọc theo danh mục -->
+            <div class="input-group">
+                <label>Lọc theo danh mục:</label>
+                <select v-model="danhMucLoc">
+                    <option value="Tất cả">Tất cả danh mục</option>
+                    <option value="Điện thoại">Điện thoại</option>
+                    <option value="Laptop">Laptop</option>
+                    <option value="Phụ kiện">Phụ kiện</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Sắp xếp theo giá:</label>
+                <select v-model="sapXep">
+                    <option value="macDinh">Mặc định</option>
+                    <option value="tangDan">Giá tăng dần</option>
+                    <option value="giamDan">Giá giảm dần</option>
+                </select>
+            </div>
+        </div>
+
+        <form class="form-add" @submit.prevent="themSanPham">
+            <div class="input-group">
+                <label>Tên sản phẩm (*)</label>
+                <input type="text" v-model.trim="form.ten" placeholder="Ví dụ: iPhone 15">
+            </div>
+            <div class="input-group">
+                <label>Giá VNĐ (*)</label>
+                <input type="number" v-model.number="form.gia" min="0" step="1000">
+            </div>
+            <div class="input-group">
+                <label>Danh mục</label>
+                <select v-model="form.danhMuc">
+                    <option value="Điện thoại">Điện thoại</option>
+                    <option value="Laptop">Laptop</option>
+                    <option value="Phụ kiện">Phụ kiện</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Tồn kho (*)</label>
+                <input type="number" v-model.number="form.soLuongTon" min="0">
+            </div>
+            <button type="submit">+ Thêm</button>
+        </form>
+
+        <!-- Bảng hiển thị sản phẩm -->
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Danh mục</th>
+                    <th>Giá</th>
+                    <th>Tồn kho</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-if="danhSachHienThi.length === 0">
+                    <td colspan="7" class="empty-row">Không tìm thấy sản phẩm nào phù hợp.</td>
+                </tr>
+                <tr v-for="sp in danhSachHienThi" :key="sp.id">
+                    <td>#{{ sp.id }}</td>
+                    <td><strong>{{ sp.ten }}</strong></td>
+                    <td>{{ sp.danhMuc }}</td>
+                    <td>{{ formatTien(sp.gia) }} đ</td>
+                    <td>{{ sp.soLuongTon }}</td>
+                    <td>
+                        <span v-if="sp.soLuongTon > 0" class="badge in-stock">Còn hàng</span>
+                        <span v-else class="badge out-of-stock">Hết hàng</span>
+                    </td>
+                    <td>
+                        <button class="btn-delete" @click="xoaSanPham(sp.id)">Xóa</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="stats">
+            <div>Hiển thị: {{ soLuongHienThi }} / {{ tongSoSanPham }} sản phẩm</div>
+            <div style="color: #c0392b;">Tổng giá trị tồn kho: {{ formatTien(tongGiaTriTonKho) }} đ</div>
+        </div>
+
+    </div>
+
+    <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    sanPhams: [
+                        { id: 1, ten: 'iPhone 15 Pro Max', gia: 29000000, danhMuc: 'Điện thoại', soLuongTon: 15 },
+                        { id: 2, ten: 'Samsung Galaxy S24', gia: 22000000, danhMuc: 'Điện thoại', soLuongTon: 0 },
+                        { id: 3, ten: 'MacBook Air M3', gia: 27000000, danhMuc: 'Laptop', soLuongTon: 5 },
+                        { id: 4, ten: 'Dell XPS 15', gia: 40000000, danhMuc: 'Laptop', soLuongTon: 3 },
+                        { id: 5, ten: 'Tai nghe AirPods Pro', gia: 5500000, danhMuc: 'Phụ kiện', soLuongTon: 20 },
+                        { id: 6, ten: 'Cáp sạc Type-C', gia: 150000, danhMuc: 'Phụ kiện', soLuongTon: 0 }
+                    ],
+                    
+                    tuKhoa: '',
+                    danhMucLoc: 'Tất cả',
+                    sapXep: 'macDinh',
+                    
+                    thongBao: '',
+                    trangThaiTrang: 'Đang khởi tạo...',
+
+                    form: {
+                        ten: '',
+                        gia: 0,
+                        danhMuc: 'Điện thoại',
+                        soLuongTon: 0
+                    }
+                }
+            },
+            
+            // Dùng mounted để đặt trạng thái trang thành sẵn sàng
+            mounted() {
+                this.trangThaiTrang = 'Sẵn sàng';
+            },
+
+            // Dùng watch thông báo khi từ khóa có đúng 1 ký tự, còn lại xóa thông báo
+            watch: {
+                tuKhoa(giaTriMoi) {
+                    if (giaTriMoi.trim().length === 1) {
+                        this.thongBao = 'Gợi ý: Hãy nhập từ 2 ký tự trở lên để tìm kiếm chính xác hơn.';
+                    } else {
+                        this.thongBao = ''; 
+                    }
+                }
+            },
+
+            computed: {
+                // Tìm kiếm, lọc và sắp xếp hoạt động kết hợp
+                danhSachHienThi() {
+                    let ketQua = this.sanPhams;
+
+                    // Tìm kiếm theo tên, không phân biệt chữ hoa chữ thường
+                    if (this.tuKhoa.trim() !== '') {
+                        const tuKhoaThuong = this.tuKhoa.toLowerCase();
+                        ketQua = ketQua.filter(sp => sp.ten.toLowerCase().includes(tuKhoaThuong));
+                    }
+
+                    if (this.danhMucLoc !== 'Tất cả') {
+                        ketQua = ketQua.filter(sp => sp.danhMuc === this.danhMucLoc);
+                    }
+
+                    // Sắp xếp theo giá
+                    let mangDaSapXep = [...ketQua];
+                    if (this.sapXep === 'tangDan') {
+                        mangDaSapXep.sort((a, b) => a.gia - b.gia);
+                    } else if (this.sapXep === 'giamDan') {
+                        mangDaSapXep.sort((a, b) => b.gia - a.gia);
+                    }
+
+                    return mangDaSapXep;
+                },
+
+                //Số sản phẩm hiển thị và tổng số sản phẩm
+                soLuongHienThi() {
+                    return this.danhSachHienThi.length;
+                },
+                tongSoSanPham() {
+                    return this.sanPhams.length;
+                },
+
+                // Tổng giá trị tồn kho
+                tongGiaTriTonKho() {
+                    return this.danhSachHienThi.reduce((tong, sp) => {
+                        return tong + (sp.gia * sp.soLuongTon);
+                    }, 0);
+                }
+            },
+
+            methods: {
+                // Thêm sản phẩm mới với kiểm tra dữ liệu
+                themSanPham() {
+                    if (this.form.ten.trim() === '') {
+                        alert('Lỗi: Tên sản phẩm không được để trống!');
+                        return;
+                    }
+                    if (this.form.gia <= 0) {
+                        alert('Lỗi: Giá sản phẩm phải lớn hơn 0!');
+                        return;
+                    }
+                    if (!Number.isInteger(this.form.soLuongTon) || this.form.soLuongTon < 0) {
+                        alert('Lỗi: Số lượng tồn kho phải là số nguyên không âm!');
+                        return;
+                    }
+
+                    const spMoi = {
+                        id: Date.now(), 
+                        ten: this.form.ten.trim(),
+                        gia: this.form.gia,
+                        danhMuc: this.form.danhMuc,
+                        soLuongTon: this.form.soLuongTon
+                    };
+
+                    this.sanPhams.push(spMoi);
+
+                    this.form.ten = '';
+                    this.form.gia = 0;
+                    this.form.soLuongTon = 0;
+                    alert('Thêm sản phẩm thành công!');
+                },
+
+                // Xóa sản phẩm sau khi xác nhận
+                xoaSanPham(idCanXoa) {
+                    if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi hệ thống?')) {
+                        this.sanPhams = this.sanPhams.filter(sp => sp.id !== idCanXoa);
+                    }
+                },
+
+                formatTien(so) {
+                    return new Intl.NumberFormat('vi-VN').format(so);
+                }
+            }
+        });
+
+        app.mount('#app');
+    </script>
+</body>
+</html>
