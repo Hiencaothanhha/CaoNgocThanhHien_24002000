@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Sản phẩm</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f8;
+            color: #333;
+            padding: 20px;
+            max-width: 850px;
+            margin: auto;
+        }
+
+        #app {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            color: #5c7c99;
+            margin-top: 0;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        fieldset {
+            border: 1px solid #dce4ec;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            background-color: #fbfcfd;
+        }
+
+        legend {
+            font-weight: 600;
+            color: #5c7c99;
+            padding: 0 12px;
+        }
+
+        form {
+            text-align: right; 
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            text-align: left;
+        }
+
+        .form-group label {
+            width: 130px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            padding: 10px 12px;
+            border: 1px solid #ccd6e0;
+            border-radius: 6px;
+            flex: 1;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            border-color: #ffb6c1;
+            box-shadow: 0 0 0 3px rgba(255, 182, 193, 0.25);
+        }
+
+        button {
+            padding: 9px 18px;
+            margin-left: 10px; 
+            background-color: #a2c2e1;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: #8ab0d4;
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        button[type="button"],
+        td button:last-child {
+            background-color: #ffb6c1;
+        }
+
+        button[type="button"]:hover,
+        td button:last-child:hover {
+            background-color: #f9a3b1;
+        }
+
+        table {
+            width: 96%;
+            margin: 20px auto 0 auto; 
+            border-collapse: collapse;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        }
+
+        th, td {
+            border-bottom: 1px solid #edf2f7;
+            padding: 14px 15px;
+            text-align: center; 
+        }
+
+        th {
+            background-color: #e6f0fa;
+            color: #4a657a;
+            font-weight: 600;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #f9fbff;
+        }
+
+        td button {
+            padding: 6px 12px;
+            font-size: 0.9em;
+            margin: 0 4px; 
+        }
+
+        .message {
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h2>Quản lý Sản phẩm</h2>
+
+        <!-- Nếu API trả lỗi, hiển thị thông báo trên giao diện -->
+        <div v-if="message" class="message" :class="{'error': isError, 'success': !isError}">
+            {{ message }}
+        </div>
+
+        <!-- Thêm / Sửa sản phẩm -->
+        <fieldset>
+            <legend>{{ isEditing ? 'Sửa Sản Phẩm' : 'Thêm Sản Phẩm Mới' }}</legend>
+
+            <!--Tạo biểu mẫu gồm ba ô Tên, Giá, Tồn kho. Dùng v-model liên kết dữ liệu -->
+            <form @submit.prevent="saveProduct">
+                <div class="form-group">
+                    <label>Tên sản phẩm:</label>
+                    <input type="text" v-model="form.name" required>
+                </div>
+                <div class="form-group">
+                    <label>Đơn giá:</label>
+                    <input type="number" v-model="form.price" required min="1">
+                </div>
+                <div class="form-group">
+                    <label>Số lượng tồn:</label>
+                    <input type="number" v-model="form.stock" required min="0">
+                </div>
+                <!-- Nút Lưu chung cho cả Thêm và Sửa -->
+                <button type="submit">Lưu</button>
+                <button type="button" v-if="isEditing" @click="resetForm">Hủy bỏ</button>
+            </form>
+        </fieldset>
+
+         <!-- Bảng gồm tên sản phẩm, đơn giá, số lượng tồn và hai nút Sửa, Xóa -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên sản phẩm</th>
+                    <th>Đơn giá</th>
+                    <th>Số lượng tồn</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dùng v-for để hiển thị bảng -->
+                <tr v-for="product in products" :key="product.id">
+                    <td>{{ product.name }}</td>
+                    <td>{{ product.price }}</td>
+                    <td>{{ product.stock }}</td>
+                    <td>
+                        <!-- Hai nút Sửa, Xóa trên mỗi dòng -->
+                        <button @click="editProduct(product)">Sửa</button>
+                        <button @click="deleteProduct(product.id)">Xóa</button>
+                    </td>
+                </tr>
+                <tr v-if="products.length === 0">
+                    <td colspan="4" style="text-align: center;">Không có dữ liệu</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    products: [],
+                    form: {
+                        name: '',
+                        price: '',
+                        stock: ''
+                    },
+                    isEditing: false, // Trạng thái: đang thêm mới hay đang sửa
+                    editId: null,     // ID của sản phẩm đang được sửa
+                    message: '',      // Nội dung thông báo trên giao diện
+                    isError: false,   // Phân loại thông báo
+                    apiUrl: 'api/products.php'
+                }
+            },
+            mounted() {
+                // Khi mở trang, gọi API để lấy danh sách
+                this.fetchProducts();
+            },
+            methods: {
+                // Hàm gọi API lấy danh sách sản phẩm
+                async fetchProducts() {
+                    try {
+                        const response = await fetch(this.apiUrl);
+                        const result = await response.json();
+                        if (result.success) {
+                            this.products = result.data;
+                        } else {
+                            this.showMessage(result.message, true);
+                        }
+                    } catch (error) {
+                        this.showMessage("Không thể kết nối đến API lấy dữ liệu.", true);
+                    }
+                },
+
+                // Xử lý nút Lưu (Thêm mới hoặc Cập nhật)
+                async saveProduct() {
+                    try {
+                        let url = this.apiUrl;
+                        let method = 'POST'; // Mặc định là POST (khi bấm Lưu ở chế độ thêm)
+
+                        if (this.isEditing) {
+                            // Nếu đang sửa, đổi sang PUT và nối id vào URL để sửa đúng mã sản phẩm
+                            url = `${this.apiUrl}?id=${this.editId}`;
+                            method = 'PUT';
+                        }
+
+                        const response = await fetch(url, {
+                            method: method,
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.form)
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            this.showMessage(result.message, false);
+                            this.resetForm();
+                            // Sau khi thêm/sửa thành công, gọi lại API để cập nhật bảng mà không tải lại trang
+                            this.fetchProducts();
+                        } else {
+                            // Nếu API trả lỗi, gọi hàm showMessage để hiển thị lên giao diện
+                            this.showMessage(result.message, true);
+                        }
+                    } catch (error) {
+                        this.showMessage("Lỗi khi gửi dữ liệu lên server.", true);
+                    }
+                },
+
+                // Khi bấm Sửa, đưa dữ liệu của dòng được chọn lên biểu mẫu
+                editProduct(product) {
+                    this.isEditing = true;
+                    this.editId = product.id;
+                    this.form = { 
+                        name: product.name, 
+                        price: product.price, 
+                        stock: product.stock 
+                    };
+                },
+
+                // Xử lý nút Xóa
+                async deleteProduct(id) {
+                    // Khi bấm Xóa, yêu cầu người dùng xác nhận
+                    if (confirm("Bạn có chắc chắn muốn xóa sản phẩm này không?")) {
+                        try {
+                            // Chỉ gửi yêu cầu DELETE nếu người dùng đồng ý (nhấn OK)
+                            const response = await fetch(`${this.apiUrl}?id=${id}`, {
+                                method: 'DELETE'
+                            });
+                            const result = await response.json();
+
+                            if (result.success) {
+                                this.showMessage(result.message, false);
+                                // Sau khi xóa thành công, gọi lại API cập nhật bảng
+                                this.fetchProducts();
+                            } else {
+                                this.showMessage(result.message, true);
+                            }
+                        } catch (error) {
+                            this.showMessage("Lỗi khi gửi yêu cầu xóa.", true);
+                        }
+                    }
+                },
+
+                // Đặt lại biểu mẫu về trạng thái ban đầu
+                resetForm() {
+                    this.isEditing = false;
+                    this.editId = null;
+                    this.form = { name: '', price: '', stock: '' };
+                },
+
+                // Hàm hỗ trợ hiển thị thông báo
+                showMessage(msg, isError) {
+                    this.message = msg;
+                    this.isError = isError;
+                    // Tự động ẩn thông báo sau 4 giây
+                    setTimeout(() => {
+                        this.message = '';
+                    }, 4000);
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
